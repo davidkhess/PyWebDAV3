@@ -52,7 +52,7 @@ class AuthRequestHandler(six.moves.BaseHTTPServer.BaseHTTPRequestHandler):
                 return False
             self.log_error("authorization = %s", authorization)
             if authorization.strip() == "Bearer":
-                self.send_autherror(401, "Authorization Required")
+                self.send_autherror(401, b"Authorization Required")
                 return False
             scheme, credentials = authorization.split()
             if scheme != 'Basic':
