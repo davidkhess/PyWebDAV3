@@ -99,7 +99,10 @@ class DAVRequestHandler(AuthServer.AuthRequestHandler, LockManager):
         if DATA:
             if isinstance(DATA, str) or isinstance(DATA, six.text_type) or isinstance(DATA, bytes):
                 log.debug("Don't use iterator")
-                self.wfile.write(DATA)
+                if isinstance(DATA, str):
+                    self.wfile.write(DATA.encode('utf8'))
+                else:
+                    self.wfile.write(DATA)
             else:
                 if self._config.DAV.getboolean('http_response_use_iterator'):
                     # Use iterator to reduce using memory
