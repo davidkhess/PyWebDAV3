@@ -69,7 +69,7 @@ class DAVRequestHandler(AuthServer.AuthRequestHandler, LockManager):
         self._send_dav_version()
 
         for a, v in headers.items():
-            v = v.encode() if isinstance(v, six.text_type) else v
+            #v = v.encode() if isinstance(v, six.text_type) else v
             self.send_header(a, v)
 
         if DATA:
