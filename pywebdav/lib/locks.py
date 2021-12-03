@@ -20,6 +20,14 @@ class LockManager:
     """ Implements the locking backend and serves as MixIn for DAVRequestHandler """
 
     def _init_locks(self):
+        for token, lock in list(tokens_to_lock.items()):
+            log.info('_init_locks: lock = %s' % repr(lock))
+            log.info('lock timeout = %s' % repr(lock.timeout))
+            if not lock.isValid():
+                log.info('deleting stale lock!')
+                del uris_to_token[tokens_to_lock[token].uri]
+                del tokens_to_lock[token]
+
         return tokens_to_lock, uris_to_token
 
     def _l_isLocked(self, uri):
@@ -59,6 +67,10 @@ class LockManager:
         data['locktype'] = info.getElementsByTagNameNS('DAV:', 'locktype')[0]\
                                 .firstChild.localName
         data['lockowner'] = info.getElementsByTagNameNS('DAV:', 'owner')
+        timeout = self.headers.get('Timeout')
+        if timeout is not None:
+            data['timeout'] = int(timeout.replace("Second-", ""))
+
         return data
 
     def _lock_unlock_create(self, uri, creator, depth, data):
@@ -150,6 +162,9 @@ class LockManager:
                     if token and self._l_hasLock(token):
                         lock = self._l_getLock(token)
                         timeout = self.headers.get('Timeout', 'Infinite')
+                        if timeout.startswith("Second-"):
+                            timeout = int(timeout.replace("Second-", ""))
+
                         lock.setTimeout(timeout) # automatically refreshes
                         found = 1
 
@@ -188,6 +203,9 @@ class LockItem:
         self.modified = time.time()
 
     def isValid(self):
+        if self.timeout == "Infinite":
+            return True
+
         now = time.time()
         modified = self.modified
         timeout = self.timeout
